@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import io from "socket.io-client";
-
 const socket = io("http://localhost:3000");
+
 
 export default function PlayGame() {
   const [game, setGame] = useState(new Chess());
@@ -11,7 +11,6 @@ export default function PlayGame() {
   const [status, setStatus] = useState("");
   const [isGameCreated, setIsGameCreated] = useState(false);
   const [fen, setFen] = useState(game.fen());
-  const [pgn, setPgn] = useState(game.pgn());
   const [isWhite, setIsWhite] = useState(true);
 
   useEffect(() => {
@@ -46,6 +45,9 @@ export default function PlayGame() {
       }
       console.log(`Move made in game with ID: ${gameId}`)
     });
+
+    socket.on('error', ( message ) => {
+      alert(`${message}`);});
 
     socket.on('playerJoined', ({ playerId }) => {
       console.log(`Player ${playerId} joined the game.`);
@@ -115,13 +117,14 @@ export default function PlayGame() {
     // Make the move locally
     game.move(move);
     setFen(game.fen());
-    setPgn(game.pgn());
     return true;
   }
 
   function onSnapEnd() {
     setFen(game.fen());
   }
+
+
 
   function updateStatus() {
     let status = "";
@@ -147,31 +150,42 @@ export default function PlayGame() {
   }
 
   return (
-    <div>
-      {(!isGameCreated) ? (
-        <div>
-          <button onClick={createGame}>Create Game</button>
-          <button onClick={joinGame}>Join Game</button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      {!isGameCreated ? (
+        <div className="space-x-4">
+          <button 
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700" 
+            onClick={createGame}
+          >
+            Create Game
+          </button>
+          <button 
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700" 
+            onClick={joinGame}
+          >
+            Join Game
+          </button>
         </div>
       ) : (
-        <div>
-          <p>Game ID: {gameId}</p>
+        <div className="space-y-4">
+          <p className="text-lg font-semibold">Game ID: {gameId}</p>
           <Chessboard
             boardWidth={600}
             position={fen}
             onPieceDrop={onDrop}
             onPieceDragBegin={onDragStart}
             onPieceDragEnd={onSnapEnd}
-            boardOrientation= {isWhite ? 'white' : 'black'}
+            boardOrientation={isWhite ? 'white' : 'black'}
             allowDragOutsideBoard={false}
+            className="border-4 border-gray-700 rounded"
           />
-          <div>
-            <p>Status: {status}</p>
-            <p>FEN: {fen}</p>
-            <p>PGN: {pgn}</p>
+          <div className="mt-4 p-4 bg-white shadow-md rounded">
+            <p className="text-lg font-semibold">Status: {status}</p>
+            <p className="text-sm font-mono">FEN: {fen}</p>
           </div>
         </div>
       )}
     </div>
   );
+  
 }

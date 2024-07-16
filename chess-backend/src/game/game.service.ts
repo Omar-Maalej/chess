@@ -2,13 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { Chess } from 'chess.js';
 import { Game } from './game.interface';
 
+const prefix = "CHESS_";
+
 @Injectable()
 export class GameService {
   private games: Map<string, Game> = new Map();
 
   createGame(playerId: string): string {
-    const gameId = this.generateGameId();
-    const game = new Chess();
+    const gameId = prefix + this.generateGameId().toUpperCase();
+    const game = new Chess(); 
     this.games.set(gameId, { game, id: gameId, players: [playerId] });
     return gameId;
   }
@@ -29,6 +31,6 @@ export class GameService {
   }
 
   private generateGameId(): string {
-    return Math.random().toString(36).substr(2, 9);
+    return Math.random().toString(36).substr(2, 7);
   }
 }

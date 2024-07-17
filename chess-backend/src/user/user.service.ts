@@ -46,7 +46,7 @@ export class UserService {
     return this.userModel.findByIdAndDelete(id).exec();
   }
 
-  addFriend(userId: string, friendId: string) {
+  async addFriend(userId: string, friendId: string) {
     //same user
     if(userId === friendId) {
       return;
@@ -55,11 +55,18 @@ export class UserService {
     if(this.userModel.findById(userId).exec() === null || this.userModel.findById(friendId).exec() === null) {
       return;
     }
+    //check if user is already a friend
+    const user = await this.userModel.findById(userId).exec();
+    const friendIds = user.friends.map(friend => friend.id);
+    if(friendIds.includes(friendId)) 
+        return;
 
     //add friend
     this.userModel.findByIdAndUpdate(friendId, {
       $push: { friends: userId }
     }).exec();
+
+    
     return this.userModel.findByIdAndUpdate(userId, {
       $push: { friends: friendId }
     }).exec();
